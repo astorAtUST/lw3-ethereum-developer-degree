@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Conexión a Metamask con Ethers</title>
+  <!-- Agrega la librería ethers -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.9.0/ethers.umd.js"></script>
+  <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+</head>
+<body>
+  <h1>Conexión a Metamask</h1>
+  <button onclick="connectMetamask()">Conectar a Metamask</button>
+  <button onclick="getTokenBalance()">Obtener Saldo del Token</button>
+  <button onclick="sendToken()">Enviar Token</button>
+
+  <script>
+    let provider;
+    let signer;
+
+    async function connectMetamask() {
+      if (window.ethereum) {
+        try {
+          await window.ethereum.request({ method: 'eth_requestAccounts' });
+          provider = new ethers.providers.Web3Provider(window.ethereum);
+          signer = provider.getSigner();
+          alert('Conexión exitosa con Metamask.');
+        } catch (error) {
+          console.error('Error al conectar con Metamask:', error);
+          alert('Error al conectar con Metamask. Por favor, revisa la consola para más detalles.');
+        }
+      } else {
+        alert('Metamask no está instalado. Por favor, instálalo e inténtalo nuevamente.');
+      }
+    }
+
+    async function getTokenBalance() {
+      if (!provider || !signer) {
+        alert('Por favor, conecta primero a Metamask.');
+        return;
+      }
+
+      try {
+        const tokenContractAddress = '0x779877A7B0D9E8603169DdbD7836e478b4624789'; // Reemplaza esto con la dirección del contrato del token
+        const tokenContract = new ethers.Contract(tokenContractAddress, ['function balanceOf(address) view returns (uint)'], signer);
+        const userAddress = await signer.getAddress();
+
+        const balance = await tokenContract.balanceOf(userAddress);
+        alert(`Saldo del token: ${ethers.utils.formatUnits(balance, 18)}`); // Ajusta el valor 18 según la cantidad de decimales del token
+      } catch (error) {
+        console.error('Error al obtener el saldo del token:', error);
+        alert('Error al obtener el saldo del token. Por favor, revisa la consola para más detalles.');
+      }
+    }
+
+    async function sendToken() {
+      if (!provider || !signer) {
+        alert('Por favor, conecta primero a Metamask.');
+        return;
+      }
+
+      try {
+        const tokenContractAddress = 'CONTRATO_DEL_TOKEN'; // Reemplaza esto con la dirección del contrato del token
+        const tokenContract = new ethers.Contract(tokenContractAddress, ['function transfer(address, uint256)'], signer);
+
+        const recipientAddress = 'DIRECCION_DEL_DESTINATARIO'; // Reemplaza esto con la dirección del destinatario
+        const amountToSend = ethers.utils.parseUnits('10', 18); // Reemplaza '10' con la cantidad que deseas enviar
+
+        const tx = await tokenContract.transfer(recipientAddress, amountToSend);
+        await tx.wait();
+        alert(`Transacción exitosa. Tokens enviados a: ${recipientAddress}`);
+      } catch (error) {
+        console.error('Error al enviar tokens:', error);
+        alert('Error al enviar tokens. Por favor, revisa la consola para más detalles.');
+      }
+    }
+  </script>
+</body>
+</html>
